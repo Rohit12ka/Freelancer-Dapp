@@ -1,26 +1,44 @@
-# Freelancer-Dapp
-Blockchain based decentralized application
+# Freelancer DApp
 
-A decentralized freelancing marketplace where clients and freelancers connect, work, and get paid — without a middleman taking a cut or holding the funds. Payments sit in a smart contract escrow and release automatically based on agreed milestones, and every rating lives permanently on-chain.
+![Solidity](https://img.shields.io/badge/Solidity-%5E0.8.x-363636?style=flat&logo=solidity)
+![Hardhat](https://img.shields.io/badge/Built%20with-Hardhat-yellow)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
-## Why Decentralized?
+A decentralized freelancing marketplace where clients and freelancers connect, work, and get paid — no middleman fees, no frozen accounts, no company owning your reputation. Funds sit in a smart contract escrow and release automatically as milestones are approved.
 
-Traditional freelance platforms (Upwork, Fiverr) take 10–20% in fees, can freeze funds or accounts unilaterally, and own your reputation data. This DApp fixes that:
+## Table of Contents
 
-- **No platform fees** — only network gas costs
-- **Trustless escrow** — funds are locked in a smart contract, not a company's bank account
-- **Portable reputation** — your ratings are tied to your wallet, not a platform account
-- **Transparent disputes** — resolution logic is public and auditable, not a hidden support-ticket process
+- [Why Decentralized](#why-decentralized)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Smart Contract Functions](#smart-contract-functions)
+- [Project Structure](#project-structure)
+- [Full Setup](#full-setup)
+- [Usage](#usage)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Why Decentralized
+
+Traditional platforms (Upwork, Fiverr) take 10–20% in fees and can freeze funds unilaterally. This fixes that:
+
+- **Zero platform fees** — only network gas
+- **Trustless escrow** — funds locked in a contract, not a company's bank account
+- **Portable reputation** — ratings tied to your wallet, not a platform login
+- **Transparent disputes** — resolution logic is public and auditable
 
 ## Features
 
-- 🔐 **Wallet-based login** — connect with MetaMask, no email/password signup
-- 📋 **Post & browse jobs** — clients list jobs with budget and description; freelancers browse and apply
-- 🤝 **Smart contract escrow** — client deposits the budget upfront; funds are locked until work is approved
-- 💰 **Milestone payments** — large jobs can be split into milestones, each released independently
-- ⚖️ **Dispute resolution** — either party can raise a dispute, routed to on-chain arbitration
-- ⭐ **On-chain reputation** — every completed job adds a permanent, tamper-proof rating to a freelancer's address
-- 🔔 **Event-driven updates** — frontend listens to contract events for real-time job/payment status
+| | |
+|---|---|
+| 🔐 Wallet login | Connect with MetaMask — no email/password |
+| 📋 Job board | Post and browse jobs on-chain |
+| 🤝 Escrow | Client's budget is locked until work is approved |
+| 💰 Milestones | Large jobs split into independently-released payments |
+| ⚖️ Disputes | Either party can trigger on-chain arbitration |
+| ⭐ Reputation | Ratings are permanent and tied to a wallet address |
 
 ## Tech Stack
 
@@ -29,24 +47,36 @@ Traditional freelance platforms (Upwork, Fiverr) take 10–20% in fees, can free
 | Smart Contracts | Solidity ^0.8.x |
 | Dev Environment | Hardhat |
 | Frontend | React.js + Ethers.js |
-| Wallet Integration | MetaMask |
-| Network | Ethereum (Sepolia testnet) / Polygon (Amoy testnet) |
-| Storage (off-chain data) | IPFS (job descriptions, attachments) |
+| Wallet | MetaMask |
+| Network | Ethereum (Sepolia) / Polygon (Amoy) testnet |
+| Off-chain storage | IPFS (job descriptions, attachments) |
 
-## Smart Contract Overview
+## Quick Start
+
+```bash
+git clone https://github.com/your-username/freelancer-dapp.git
+cd freelancer-dapp && npm install
+cp .env.example .env            # add your PRIVATE_KEY and RPC_URL
+npx hardhat run scripts/deploy.js --network sepolia
+cd frontend && npm install && npm start
+```
+
+App runs at `http://localhost:3000`. See [Full Setup](#full-setup) below if any step needs more detail.
+
+## Smart Contract Functions
 
 | Function | Description |
 |---|---|
-| `postJob(string description, uint256 budget)` | Client creates a new job listing and deposits funds into escrow |
+| `postJob(string description, uint256 budget)` | Client creates a job and deposits funds into escrow |
 | `applyForJob(uint256 jobId)` | Freelancer applies to an open job |
-| `hireFreelancer(uint256 jobId, address freelancer)` | Client selects a freelancer from applicants |
-| `submitMilestone(uint256 jobId, uint256 milestoneId)` | Freelancer marks a milestone as complete |
-| `approveMilestone(uint256 jobId, uint256 milestoneId)` | Client approves work and releases payment for that milestone |
-| `raiseDispute(uint256 jobId)` | Either party flags a job for arbitration |
-| `resolveDispute(uint256 jobId, address winner)` | Arbitrator releases escrowed funds based on resolution |
-| `leaveReview(address user, uint8 rating, string comment)` | Either party rates the other after job completion |
+| `hireFreelancer(uint256 jobId, address freelancer)` | Client selects a freelancer |
+| `submitMilestone(uint256 jobId, uint256 milestoneId)` | Freelancer marks a milestone complete |
+| `approveMilestone(uint256 jobId, uint256 milestoneId)` | Client approves and releases that milestone's payment |
+| `raiseDispute(uint256 jobId)` | Either party flags the job for arbitration |
+| `resolveDispute(uint256 jobId, address winner)` | Arbitrator releases escrowed funds |
+| `leaveReview(address user, uint8 rating, string comment)` | Either party rates the other post-completion |
 
-> Adjust these signatures to match your actual contract — this reflects the standard structure this type of DApp typically needs.
+> Adjust signatures to match your actual contract — this reflects the standard structure this type of DApp needs.
 
 ## Project Structure
 
@@ -56,104 +86,65 @@ freelancer-dapp/
 │   ├── FreelancerEscrow.sol
 │   ├── Reputation.sol
 │   └── DisputeResolver.sol
-├── scripts/
-│   └── deploy.js
-├── test/
-│   └── FreelancerEscrow.test.js
+├── scripts/deploy.js
+├── test/FreelancerEscrow.test.js
 ├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── pages/
-│   │   └── utils/
+│   ├── src/{components,hooks,pages,utils}/
 │   └── package.json
 ├── hardhat.config.js
 ├── .env.example
 └── README.md
 ```
 
-## Getting Started
+## Full Setup
 
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18+)
-- [MetaMask](https://metamask.io/) browser extension
-- Test ETH/MATIC from a faucet (for testnet deployment)
-
-### Installation
+**Prerequisites:** [Node.js](https://nodejs.org/) v18+, [MetaMask](https://metamask.io/), test ETH/MATIC from a faucet.
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/freelancer-dapp.git
-cd freelancer-dapp
+# 1. Install dependencies
+npm install && (cd frontend && npm install)
 
-# Install root (contracts) dependencies
-npm install
+# 2. Configure environment — create .env in root:
+#    PRIVATE_KEY=your_wallet_private_key
+#    RPC_URL=your_testnet_rpc_url
+#    ETHERSCAN_API_KEY=your_etherscan_api_key
 
-# Install frontend dependencies
-cd frontend
-npm install
-cd ..
-```
-
-### Configure Environment
-
-Create a `.env` file in the root directory:
-
-```env
-PRIVATE_KEY=your_wallet_private_key
-RPC_URL=your_testnet_rpc_url
-ETHERSCAN_API_KEY=your_etherscan_api_key
-```
-
-> Never commit your `.env` file or private key to version control.
-
-### Compile & Test Contracts
-
-```bash
+# 3. Compile & test
 npx hardhat compile
 npx hardhat test
-```
 
-### Deploy to Testnet
-
-```bash
+# 4. Deploy
 npx hardhat run scripts/deploy.js --network sepolia
+# → copy the deployed address into frontend/src/utils/contractConfig.js
+
+# 5. Run frontend
+cd frontend && npm start
 ```
 
-Copy the deployed contract address into `frontend/src/utils/contractConfig.js`.
-
-### Run the Frontend
-
-```bash
-cd frontend
-npm start
-```
-
-The app will be available at `http://localhost:3000`.
+> Never commit `.env` or a private key to version control.
 
 ## Usage
 
 1. Connect your MetaMask wallet
-2. **As a client:** post a job with a description, budget, and milestones
-3. **As a freelancer:** browse open jobs and apply
+2. **Client:** post a job with description, budget, and milestones
+3. **Freelancer:** browse open jobs and apply
 4. Client reviews applicants and hires one
 5. Freelancer submits work per milestone; client approves to release payment
 6. Either party can raise a dispute if something goes wrong
-7. Both parties leave a review after the job closes
+7. Both leave a review once the job closes
 
 ## Roadmap
 
-- [ ] Multi-token payment support (USDC, DAI)
-- [ ] IPFS-based file attachments for job deliverables
-- [ ] DAO-based community arbitration instead of a single arbitrator
+- [ ] Multi-token payments (USDC, DAI)
+- [ ] IPFS file attachments for deliverables
+- [ ] DAO-based community arbitration
 - [ ] Mobile-responsive UI
-- [ ] Subgraph (The Graph) for faster job/history queries
+- [ ] Subgraph (The Graph) for faster queries
 
 ## Contributing
 
-Contributions are welcome. Please fork the repo, create a feature branch, and open a pull request with a clear description of your changes.
+Fork the repo, create a feature branch, and open a pull request with a clear description of your changes.
 
 ## License
 
-This project is licensed under the MIT License — see the `LICENSE` file for details.
+MIT — see the `LICENSE` file for details.
