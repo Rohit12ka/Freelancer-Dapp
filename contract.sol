@@ -27,3 +27,21 @@ contract Storage {
         return number;
     }
 }
+const hre = require("hardhat");
+
+async function main() {
+  const [deployer] = await hre.ethers.getSigners();
+  console.log("Deploying with account:", deployer.address);
+
+  const FreelanceEscrow = await hre.ethers.getContractFactory("FreelanceEscrow");
+  const escrow = await FreelanceEscrow.deploy();
+  await escrow.waitForDeployment();
+
+  console.log("FreelanceEscrow deployed to:", await escrow.getAddress());
+  console.log("Arbiter (owner):", deployer.address);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
