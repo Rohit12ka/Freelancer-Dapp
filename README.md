@@ -1,150 +1,228 @@
-# Freelancer DApp
+<div align="center">
 
-![Solidity](https://img.shields.io/badge/Solidity-%5E0.8.x-363636?style=flat&logo=solidity)
-![Hardhat](https://img.shields.io/badge/Built%20with-Hardhat-yellow)
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+# ⛓️ ChainLance
 
-A decentralized freelancing marketplace where clients and freelancers connect, work, and get paid — no middleman fees, no frozen accounts, no company owning your reputation. Funds sit in a smart contract escrow and release automatically as milestones are approved.
+### Decentralized Freelance Marketplace with Trustless Escrow
 
-## Table of Contents
+*Hire, work, and get paid — without middlemen, hidden fees, or payment disputes.*
 
-- [Why Decentralized](#why-decentralized)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Smart Contract Functions](#smart-contract-functions)
-- [Project Structure](#project-structure)
-- [Full Setup](#full-setup)
-- [Usage](#usage)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+![Solidity](https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white)
+![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white)
+![Hardhat](https://img.shields.io/badge/Hardhat-FFF100?style=for-the-badge&logo=ethereum&logoColor=black)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![IPFS](https://img.shields.io/badge/IPFS-65C2CB?style=for-the-badge&logo=ipfs&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-39FF88?style=for-the-badge)
 
-## Why Decentralized
+[Live Demo](#) · [Report Bug](../../issues) · [Request Feature](../../issues)
 
-Traditional platforms (Upwork, Fiverr) take 10–20% in fees and can freeze funds unilaterally. This fixes that:
+</div>
 
-- **Zero platform fees** — only network gas
-- **Trustless escrow** — funds locked in a contract, not a company's bank account
-- **Portable reputation** — ratings tied to your wallet, not a platform login
-- **Transparent disputes** — resolution logic is public and auditable
+---
 
-## Features
+## 📌 Overview
 
-| | |
-|---|---|
-| 🔐 Wallet login | Connect with MetaMask — no email/password |
-| 📋 Job board | Post and browse jobs on-chain |
-| 🤝 Escrow | Client's budget is locked until work is approved |
-| 💰 Milestones | Large jobs split into independently-released payments |
-| ⚖️ Disputes | Either party can trigger on-chain arbitration |
-| ⭐ Reputation | Ratings are permanent and tied to a wallet address |
+Traditional freelance platforms take **10–20% fees**, hold your money for days, and act as a single point of trust. **ChainLance** replaces that middleman with smart contracts.
 
-## Tech Stack
+A client locks funds in an **on-chain escrow**. The freelancer delivers work milestone by milestone. Payment is released automatically on approval — or resolved through a transparent dispute process if something goes wrong.
+
+## ✨ Features
+
+- 🔐 **Escrow Smart Contract** — client funds are locked on-chain until work is approved
+- 🎯 **Milestone-Based Payments** — split a job into stages, pay as each one is delivered
+- 👤 **On-Chain Profiles** — freelancers and clients identified by wallet address
+- ⭐ **Tamper-Proof Reputation** — ratings and completed-job history stored on-chain
+- ⚖️ **Dispute Resolution** — arbiter can release or refund funds if parties disagree
+- ⏳ **Auto-Refund on Deadline** — client can reclaim funds if the freelancer never delivers
+- 📁 **IPFS Storage** — job descriptions and deliverables stored off-chain, hash kept on-chain
+- 🦊 **MetaMask Integration** — connect wallet and sign transactions from the browser
+
+## 🔄 How It Works
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant SC as Smart Contract (Escrow)
+    participant F as Freelancer
+    participant A as Arbiter
+
+    C->>SC: Create job + deposit funds
+    F->>SC: Accept job
+    F->>SC: Submit milestone (IPFS hash)
+    alt Work approved
+        C->>SC: Approve milestone
+        SC->>F: Release payment
+    else Dispute raised
+        C->>SC: Raise dispute
+        A->>SC: Resolve (release / refund)
+    end
+```
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+    U[User Wallet<br/>MetaMask] --> FE[React Frontend]
+    FE -->|Ethers.js| SC[(Smart Contracts<br/>Ethereum)]
+    FE -->|Upload / Fetch| IPFS[(IPFS)]
+    SC -->|Events| FE
+```
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Smart Contracts | Solidity ^0.8.x |
-| Dev Environment | Hardhat |
-| Frontend | React.js + Ethers.js |
+| Smart Contracts | Solidity, OpenZeppelin |
+| Development & Testing | Hardhat, Chai, Ganache |
+| Frontend | React.js, Ethers.js, CSS3 |
+| Storage | IPFS |
 | Wallet | MetaMask |
-| Network | Ethereum (Sepolia) / Polygon (Amoy) testnet |
-| Off-chain storage | IPFS (job descriptions, attachments) |
+| Network | Ethereum (Sepolia testnet) |
 
-## Quick Start
-
-```bash
-git clone https://github.com/your-username/freelancer-dapp.git
-cd freelancer-dapp && npm install
-cp .env.example .env            # add your PRIVATE_KEY and RPC_URL
-npx hardhat run scripts/deploy.js --network sepolia
-cd frontend && npm install && npm start
-```
-
-App runs at `http://localhost:3000`. See [Full Setup](#full-setup) below if any step needs more detail.
-
-## Smart Contract Functions
-
-| Function | Description |
-|---|---|
-| `postJob(string description, uint256 budget)` | Client creates a job and deposits funds into escrow |
-| `applyForJob(uint256 jobId)` | Freelancer applies to an open job |
-| `hireFreelancer(uint256 jobId, address freelancer)` | Client selects a freelancer |
-| `submitMilestone(uint256 jobId, uint256 milestoneId)` | Freelancer marks a milestone complete |
-| `approveMilestone(uint256 jobId, uint256 milestoneId)` | Client approves and releases that milestone's payment |
-| `raiseDispute(uint256 jobId)` | Either party flags the job for arbitration |
-| `resolveDispute(uint256 jobId, address winner)` | Arbitrator releases escrowed funds |
-| `leaveReview(address user, uint8 rating, string comment)` | Either party rates the other post-completion |
-
-> Adjust signatures to match your actual contract — this reflects the standard structure this type of DApp needs.
-
-## Project Structure
+## 📂 Project Structure
 
 ```
-freelancer-dapp/
+ChainLance/
 ├── contracts/
-│   ├── FreelancerEscrow.sol
-│   ├── Reputation.sol
-│   └── DisputeResolver.sol
-├── scripts/deploy.js
-├── test/FreelancerEscrow.test.js
+│   ├── FreelanceEscrow.sol      # Core escrow + milestone logic
+│   └── Reputation.sol           # On-chain ratings
+├── scripts/
+│   └── deploy.js                # Deployment script
+├── test/
+│   └── FreelanceEscrow.test.js  # Unit tests
 ├── frontend/
-│   ├── src/{components,hooks,pages,utils}/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── utils/               # Contract ABI + helpers
 │   └── package.json
 ├── hardhat.config.js
 ├── .env.example
 └── README.md
 ```
 
-## Full Setup
+## 📜 Smart Contract Overview
 
-**Prerequisites:** [Node.js](https://nodejs.org/) v18+, [MetaMask](https://metamask.io/), test ETH/MATIC from a faucet.
+| Function | Who | Description |
+|---|---|---|
+| `createJob()` | Client | Creates a job and deposits payment into escrow |
+| `acceptJob()` | Freelancer | Accepts an open job |
+| `submitMilestone()` | Freelancer | Submits deliverable (IPFS hash) for a milestone |
+| `approveMilestone()` | Client | Approves work and releases that milestone's payment |
+| `raiseDispute()` | Client / Freelancer | Freezes funds and flags the job for arbitration |
+| `resolveDispute()` | Arbiter | Releases or refunds the locked funds |
+| `claimRefund()` | Client | Reclaims funds if the deadline passes with no delivery |
+| `rateFreelancer()` | Client | Leaves an on-chain rating after completion |
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) v18+
+- [MetaMask](https://metamask.io/) browser extension
+- Sepolia test ETH ([faucet](https://sepoliafaucet.com/))
+
+### 1. Clone the repository
 
 ```bash
-# 1. Install dependencies
-npm install && (cd frontend && npm install)
-
-# 2. Configure environment — create .env in root:
-#    PRIVATE_KEY=your_wallet_private_key
-#    RPC_URL=your_testnet_rpc_url
-#    ETHERSCAN_API_KEY=your_etherscan_api_key
-
-# 3. Compile & test
-npx hardhat compile
-npx hardhat test
-
-# 4. Deploy
-npx hardhat run scripts/deploy.js --network sepolia
-# → copy the deployed address into frontend/src/utils/contractConfig.js
-
-# 5. Run frontend
-cd frontend && npm start
+git clone https://github.com/Rohit12ka/ChainLance.git
+cd ChainLance
 ```
 
-> Never commit `.env` or a private key to version control.
+### 2. Install dependencies
 
-## Usage
+```bash
+npm install
+cd frontend && npm install && cd ..
+```
 
-1. Connect your MetaMask wallet
-2. **Client:** post a job with description, budget, and milestones
-3. **Freelancer:** browse open jobs and apply
-4. Client reviews applicants and hires one
-5. Freelancer submits work per milestone; client approves to release payment
-6. Either party can raise a dispute if something goes wrong
-7. Both leave a review once the job closes
+### 3. Configure environment
 
-## Roadmap
+Copy `.env.example` to `.env` and fill in your values:
 
-- [ ] Multi-token payments (USDC, DAI)
-- [ ] IPFS file attachments for deliverables
-- [ ] DAO-based community arbitration
-- [ ] Mobile-responsive UI
-- [ ] Subgraph (The Graph) for faster queries
+```env
+ALCHEMY_API_URL=your_alchemy_sepolia_url
+PRIVATE_KEY=your_wallet_private_key
+```
 
-## Contributing
+> ⚠️ **Never commit your `.env` file or share your private key.** Use a dedicated test wallet.
 
-Fork the repo, create a feature branch, and open a pull request with a clear description of your changes.
+### 4. Compile & test
 
-## License
+```bash
+npx hardhat compile
+npx hardhat test
+```
 
-MIT — see the `LICENSE` file for details.
+### 5. Deploy
+
+```bash
+# Local network
+npx hardhat node
+npx hardhat run scripts/deploy.js --network localhost
+
+# Sepolia testnet
+npx hardhat run scripts/deploy.js --network sepolia
+```
+
+Copy the deployed contract address into `frontend/src/utils/config.js`.
+
+### 6. Run the frontend
+
+```bash
+cd frontend
+npm start
+```
+
+Open [http://localhost:3000](http://localhost:3000) and connect your MetaMask wallet.
+
+## 🔒 Security Considerations
+
+- Funds are held by the contract, never by an individual or the platform
+- Uses OpenZeppelin's `ReentrancyGuard` on all payout functions
+- Checks-Effects-Interactions pattern followed for every ETH transfer
+- Role-based access control for client, freelancer, and arbiter actions
+- Unit tests cover the happy path, dispute flow, and refund edge cases
+
+> This project is for learning and portfolio purposes and has **not** been professionally audited. Do not use with real funds on mainnet.
+
+## 🗺️ Roadmap
+
+- [x] Escrow with milestone payments
+- [x] Dispute resolution by arbiter
+- [x] IPFS-based deliverable storage
+- [ ] ERC-20 stablecoin payments (USDC / DAI)
+- [ ] Multi-arbiter DAO voting for disputes
+- [ ] Soulbound NFT badges for completed jobs
+- [ ] Real-time notifications via contract events
+- [ ] Layer-2 deployment (Polygon / Arbitrum) for lower gas fees
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create your branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m "Add amazing feature"`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for details.
+
+## 👨‍💻 Author
+
+**Rohit Kumar**
+Web3 & MERN Developer · B.Tech CS (AI)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/rohit-kumar-5309b022a)
+[![Portfolio](https://img.shields.io/badge/Portfolio-39FF88?style=flat-square&logo=netlify&logoColor=black)](https://rohit12ka.netlify.app)
+[![Email](https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:rohitkumar27965@gmail.com)
+
+---
+
+<div align="center">
+
+⭐ If you found this project useful, consider giving it a star!
+
+</div>
