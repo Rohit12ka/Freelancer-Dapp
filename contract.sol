@@ -45,3 +45,124 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+import { useState, useEffect, useCallback } from "react";
+import { BrowserProvider } from "ethers";
+import { REQUIRED_CHAIN_ID, REQUIRED_CHAIN_HEX } from "../utils/config";
+
+/**
+ * MetaMask wallet connection hook (ethers v6).
+ * Returns: account, signer, provider, chainId, isConnecting, error,
+ *          connect(), disconnect(), wrongNetwork
+ */
+export default function useWallet() {
+  const [account, setAccount] = useState(null);
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [chainId, setChainId] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState("");
+
+  const setup = useCallback(async (accounts) => {
+    if (!accounts || accounts.length === 0) {
+      setAccount(null);
+      setSigner(null);
+      return;
+    }
+    const browserProvider = new BrowserProvider(window.ethereum);
+    const network = await browserProvider.getNetwork();
+    setProvider(browserProvider);
+    setSigner(await browserProvider.getSigner());
+    setAccount(accounts[0]);
+    setChainId(Number(network.chainId));
+  }, []);
+
+  const switchNetwork = async () => {
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: REQUIRED_CHAIN_HEX }],
+      });
+    } catch (err) {
+      // 4902 = chain wallet mein added nahi hai
+      if (err.code === 4902) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: REQUIRED_CHAIN_HEX,
+              chainName: "Sepolia Testnet",
+              nativeCurrency: { name: "Sepolia ETH", symbol: "ETH", decimals: 18 },
+              rpcUrls: ["https://rpc.sepolia.org"],
+              blockExplorerUrls: ["https://sepolia.etherscan.io"],
+            },
+          ],
+        });
+      } else {
+        throw err;
+      }
+    }
+  };
+
+  const connect = async () => {
+    setError("");
+    if (!window.ethereum) {
+      setError("MetaMask not found. Please install it from metamask.io");
+      return;
+    }
+    try {
+      setIsConnecting(true);
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      await setup(accounts);
+
+      const current = Number(await window.ethereum.request({ method: "eth_chainId" }));
+      if (current !== REQUIRED_CHAIN_ID) {
+        await switchNetwork();
+        await setup(accounts); // switch ke baad signer refresh
+      }
+    } catch (err) {
+      setError(err.code === 4001 ? "Connection request rejected." : err.message);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // MetaMask me asli "disconnect" nahi hota, bas app state clear karte hain
+  const disconnect = () => {
+    setAccount(null);
+    setSigner(null);
+    setProvider(null);
+    setChainId(null);
+  };
+
+  // Auto-reconnect + account/network change listeners
+  useEffect(() => {
+    if (!window.ethereum) return;
+
+    window.ethereum
+      .request({ method: "eth_accounts" })
+      .then(setup)
+      .catch(() => {});
+
+    const onAccountsChanged = (accounts) => setup(accounts);
+    const onChainChanged = () => window.location.reload();
+
+    window.ethereum.on("accountsChanged", onAccountsChanged);
+    window.ethereum.on("chainChanged", onChainChanged);
+    return () => {
+      window.ethereum.removeListener("accountsChanged", onAccountsChanged);
+      window.ethereum.removeListener("chainChanged", onChainChanged);
+    };
+  }, [setup]);
+
+  return {
+    account,
+    provider,
+    signer,
+    chainId,
+    isConnecting,
+    error,
+    connect,
+    disconnect,
+    wrongNetwork: account !== null && chainId !== REQUIRED_CHAIN_ID,
+  };
+}
