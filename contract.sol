@@ -166,3 +166,34 @@ export default function useWallet() {
     wrongNetwork: account !== null && chainId !== REQUIRED_CHAIN_ID,
   };
 }
+import { Contract } from "ethers";
+
+// 👉 Deploy ke baad yahan apna contract address paste karo
+export const CONTRACT_ADDRESS = "0xYourDeployedContractAddress";
+
+// Sepolia testnet
+export const REQUIRED_CHAIN_ID = 11155111;
+export const REQUIRED_CHAIN_HEX = "0xaa36a7";
+
+// Hardhat compile ke baad artifacts/contracts/FreelanceEscrow.sol/FreelanceEscrow.json
+// se "abi" copy karke yahan import karo, ya neeche wala human-readable ABI use karo.
+export const CONTRACT_ABI = [
+  "function jobCount() view returns (uint256)",
+  "function jobs(uint256) view returns (uint256 id, address client, address freelancer, string descriptionHash, uint256 totalAmount, uint256 releasedAmount, uint256 deadline, uint8 status, bool rated)",
+  "function getMilestones(uint256 jobId) view returns (tuple(uint256 amount, string deliverableHash, uint8 status)[])",
+  "function getAverageRating(address freelancer) view returns (uint256)",
+  "function createJob(string descriptionHash, uint256[] amounts, uint256 deadline) payable returns (uint256)",
+  "function cancelJob(uint256 jobId)",
+  "function acceptJob(uint256 jobId)",
+  "function submitMilestone(uint256 jobId, uint256 index, string deliverableHash)",
+  "function approveMilestone(uint256 jobId, uint256 index)",
+  "function raiseDispute(uint256 jobId)",
+  "function resolveDispute(uint256 jobId, bool payFreelancer)",
+  "function claimRefund(uint256 jobId)",
+  "function rateFreelancer(uint256 jobId, uint8 rating)",
+  "event JobCreated(uint256 indexed jobId, address indexed client, uint256 totalAmount, uint256 deadline)",
+];
+
+// signer se contract instance banao (transactions ke liye)
+export const getContract = (signerOrProvider) =>
+  new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signerOrProvider);
