@@ -197,3 +197,23 @@ export const CONTRACT_ABI = [
 // signer se contract instance banao (transactions ke liye)
 export const getContract = (signerOrProvider) =>
   new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signerOrProvider);
+
+const hre = require("hardhat");
+
+async function main() {
+  const [deployer] = await hre.ethers.getSigners();
+  console.log("Deploying with account:", deployer.address);
+
+  const FreelanceEscrow = await hre.ethers.getContractFactory("FreelanceEscrow");
+  // Arbiter = dispute resolve karne wala address (yahan deployer hi hai)
+  const escrow = await FreelanceEscrow.deploy(deployer.address);
+  await escrow.waitForDeployment();
+
+  console.log("FreelanceEscrow deployed to:", await escrow.getAddress());
+  console.log("Arbiter (owner):", deployer.address);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
