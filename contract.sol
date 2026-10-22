@@ -217,3 +217,34 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+contract Lottary{
+    address public manager;
+    address payable[] public players;
+    address payable public winner;
+    constructor (){
+        manager=msg.sender;
+    }
+    function participates()public payable{
+        require(msg.value == 1 ether, "Please pay 1 ether");
+        players.push(payable(msg.sender));
+    }
+    function getbalance() public view returns(uint){
+        require(manager == msg.sender,"You are not a Manager");
+        return address(this).balance;
+    }
+    function random() internal view returns(uint){
+        return uint(keccak256(abi.encodePacked(block.prevrandao,block.timestamp,players.length)));
+    }
+    function pickwinner() public{
+        require(manager == msg.sender, "You are not the winner");
+        require(players.length>=3,"Players are less then 3");
+        uint r=random();
+        uint index = r%players.length;
+        winner=players[index];
+        (bool success, ) = payable(winner).call{value: address(this).balance}("");
+        require(success, "Ether transfer failed");
+        players=new address payable[](0);
+    }
+}
