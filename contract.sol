@@ -188,35 +188,7 @@ export const CONTRACT_ABI = [
   "function submitMilestone(uint256 jobId, uint256 index, string deliverableHash)",
   "function approveMilestone(uint256 jobId, uint256 index)",
   "function raiseDispute(uint256 jobId)",
-  "function resolveDispute(uint256 jobId, bool payFreelancer)",
-  "function claimRefund(uint256 jobId)",
-  "function rateFreelancer(uint256 jobId, uint8 rating)",
-  "event JobCreated(uint256 indexed jobId, address indexed client, uint256 totalAmount, uint256 deadline)",
-];
 
-// signer se contract instance banao (transactions ke liye)
-export const getContract = (signerOrProvider) =>
-  new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signerOrProvider);
-
-const hre = require("hardhat");
-
-async function main() {
-  const [deployer] = await hre.ethers.getSigners();
-  console.log("Deploying with account:", deployer.address);
-
-  const FreelanceEscrow = await hre.ethers.getContractFactory("FreelanceEscrow");
-  // Arbiter = dispute resolve karne wala address (yahan deployer hi hai)
-  const escrow = await FreelanceEscrow.deploy(deployer.address);
-  await escrow.waitForDeployment();
-
-  console.log("FreelanceEscrow deployed to:", await escrow.getAddress());
-  console.log("Arbiter (owner):", deployer.address);
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 contract Lottary{
