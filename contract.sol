@@ -126,68 +126,6 @@ export default function useWallet() {
     }
   };
 
-  // MetaMask me asli "disconnect" nahi hota, bas app state clear karte hain
-  const disconnect = () => {
-    setAccount(null);
-    setSigner(null);
-    setProvider(null);
-    setChainId(null);
-  };
-
-  // Auto-reconnect + account/network change listeners
-  useEffect(() => {
-    if (!window.ethereum) return;
-
-    window.ethereum
-      .request({ method: "eth_accounts" })
-      .then(setup)
-      .catch(() => {});
-
-    const onAccountsChanged = (accounts) => setup(accounts);
-    const onChainChanged = () => window.location.reload();
-
-    window.ethereum.on("accountsChanged", onAccountsChanged);
-    window.ethereum.on("chainChanged", onChainChanged);
-    return () => {
-      window.ethereum.removeListener("accountsChanged", onAccountsChanged);
-      window.ethereum.removeListener("chainChanged", onChainChanged);
-    };
-  }, [setup]);
-
-  return {
-    account,
-    provider,
-    signer,
-    chainId,
-    isConnecting,
-    error,
-    connect,
-    disconnect,
-    wrongNetwork: account !== null && chainId !== REQUIRED_CHAIN_ID,
-  };
-}
-import { Contract } from "ethers";
-
-// 👉 Deploy ke baad yahan apna contract address paste karo
-export const CONTRACT_ADDRESS = "0xYourDeployedContractAddress";
-
-// Sepolia testnet
-export const REQUIRED_CHAIN_ID = 11155111;
-export const REQUIRED_CHAIN_HEX = "0xaa36a7";
-
-// Hardhat compile ke baad artifacts/contracts/FreelanceEscrow.sol/FreelanceEscrow.json
-// se "abi" copy karke yahan import karo, ya neeche wala human-readable ABI use karo.
-export const CONTRACT_ABI = [
-  "function jobCount() view returns (uint256)",
-  "function jobs(uint256) view returns (uint256 id, address client, address freelancer, string descriptionHash, uint256 totalAmount, uint256 releasedAmount, uint256 deadline, uint8 status, bool rated)",
-  "function getMilestones(uint256 jobId) view returns (tuple(uint256 amount, string deliverableHash, uint8 status)[])",
-  "function getAverageRating(address freelancer) view returns (uint256)",
-  "function createJob(string descriptionHash, uint256[] amounts, uint256 deadline) payable returns (uint256)",
-  "function cancelJob(uint256 jobId)",
-  "function acceptJob(uint256 jobId)",
-  "function submitMilestone(uint256 jobId, uint256 index, string deliverableHash)",
-  "function approveMilestone(uint256 jobId, uint256 index)",
-  "function raiseDispute(uint256 jobId)",
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
